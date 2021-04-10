@@ -1,8 +1,7 @@
 import java.util.*
 import kotlin.random.Random
 
-class IntersectionOptimizer(val steps: Int, val shuffle: Int ) {
-
+class IntersectionOptimizer(val steps: Int, val shuffle: Int) {
     fun optimize(layers: List<List<Node>>): List<List<Node>> {
         if (layers.size < 3) return layers
         var bestShuffle = prevPlacement(layers)
@@ -13,7 +12,7 @@ class IntersectionOptimizer(val steps: Int, val shuffle: Int ) {
                 1 -> bestShuffle.reversedShuffle()
                 else -> bestShuffle
             }
-            if (calcIntersections(newShuffle) < bestIntersectionsSize)
+            if (calcIntersections(newShuffle) <= bestIntersectionsSize)
                 bestShuffle = newShuffle
         }
         return bestShuffle
@@ -55,7 +54,7 @@ class IntersectionOptimizer(val steps: Int, val shuffle: Int ) {
             }
             bestShuffle.swap(pos1, pos2)
             val newIntersectionsSize = calcIntersections(prev, bestShuffle) + calcIntersections(bestShuffle, next)
-            if (newIntersectionsSize < bestIntersectionsSize)
+            if (newIntersectionsSize <= bestIntersectionsSize)
                 bestIntersectionsSize = newIntersectionsSize
             else
                 bestShuffle.swap(pos2, pos1)

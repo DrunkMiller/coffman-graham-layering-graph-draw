@@ -1,10 +1,10 @@
 import java.util.*
 
-class CoffmanGrahamLayeringAlgorithm(val layerSize: Int, val intersectionOptimizer: IntersectionOptimizer) {
+class CoffmanGrahamLayeringAlgorithm(val layerSize: Int, val intersectionOptimizer: IntersectionOptimizer? = null) {
     fun place(nodes: List<Node>): Map<Node, Position> {
-        val layers = placeInLayers(nodes)
+        val layers = placeInLayers(nodes.copy())
             .appendDummy()
-            .let { intersectionOptimizer.optimize(it) }
+            .let { intersectionOptimizer?.optimize(it) ?: it }
 
         return assignCoordinates(layers).associate { it.first to it.second }
     }

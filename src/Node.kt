@@ -16,7 +16,12 @@ data class Node(
     override fun hashCode() = id.hashCode()
 }
 
-fun List<Node>.ids() = this.map(Node::id)
+fun List<Node>.copy(): List<Node> {
+    val copiesNodes = this.map { it.copy() }.associateBy { it.id }
+    return copiesNodes.map { (id, node) ->
+        Node(id, node.children.mapNotNull { copiesNodes[it.id] }.toMutableList() )
+    }
+}
 
 data class Position(val y: Double, val x: Double) {
     fun shift(shift: Double) = this.copy(x = this.x - shift)
