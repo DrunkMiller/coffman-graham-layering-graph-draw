@@ -1,4 +1,4 @@
-## Руализация layered-tree-draw алгоритма
+## Реализация coffman-graham-layering алгоритма
 
 *В replit.com уже есть собранный jar используйте его для быстрого рисования графа*  
 *Команда запуска jar:* `kotlin -classpath main.jar MainKt "path to graph file"`  
