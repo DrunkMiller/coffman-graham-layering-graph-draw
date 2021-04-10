@@ -1,10 +1,19 @@
 import java.util.*
 import kotlin.random.Random
 
-class IntersectionOptimizer(val steps: Int, val shuffle: Int) {
+enum class PlacingStrategy {
+    AVERAGE, MEDIAN
+}
+
+class IntersectionOptimizer(val steps: Int, val shuffle: Int, val placingStrategy: PlacingStrategy) {
     fun optimize(layers: List<List<Node>>): List<List<Node>> {
         if (layers.size < 3) return layers
-        var bestShuffle = prevPlacement(layers)
+        val placingAlg = when(placingStrategy) {
+            PlacingStrategy.AVERAGE -> ::averagePlacement
+            PlacingStrategy.MEDIAN -> ::medianPlacement
+        }
+
+        var bestShuffle = prevPlacement(layers, placingAlg)
         var bestIntersectionsSize = calcIntersections(bestShuffle)
         repeat(steps) {
             val newShuffle = when(it % 2) {
@@ -12,14 +21,18 @@ class IntersectionOptimizer(val steps: Int, val shuffle: Int) {
                 1 -> bestShuffle.reversedShuffle()
                 else -> bestShuffle
             }
-            if (calcIntersections(newShuffle) <= bestIntersectionsSize)
+            val newIntersectionsSize = calcIntersections(newShuffle)
+            if (newIntersectionsSize <= bestIntersectionsSize) {
+                bestIntersectionsSize = newIntersectionsSize
                 bestShuffle = newShuffle
+            }
         }
         return bestShuffle
     }
 
-    private fun prevPlacement(layers: List<List<Node>>) =
-        listOf(layers.first()) + (0 until layers.size - 1).map { layerPrevPlacement(layers[it], layers[it + 1], ::averagePlacement) }
+    private fun prevPlacement(layers: List<List<Node>>, placeStrategy: (List<Int>) -> Int) =
+        listOf(layers.first()) +
+                (0 until layers.size - 1).map { layerPrevPlacement(layers[it], layers[it + 1], placeStrategy) }
 
     private fun List<List<Node>>.directShuffle(): List<List<Node>> {
         val one = this.map { it }.toMutableList()
@@ -65,7 +78,7 @@ class IntersectionOptimizer(val steps: Int, val shuffle: Int) {
     private fun layerPrevPlacement(
         firstLayer: List<Node>,
         secondLayer: List<Node>,
-        finalPlace: (List<Int>) -> Int
+        placeStrategy: (List<Int>) -> Int
     ): List<Node> {
         val indexedOne = firstLayer.mapIndexed { index, node -> node to index }
         val newTwoPlace = secondLayer.map { node ->
@@ -73,7 +86,7 @@ class IntersectionOptimizer(val steps: Int, val shuffle: Int) {
                 .filter { node in it.first.children }
                 .map { it.second }
                 .ifEmpty { listOf(Int.MAX_VALUE) }
-                .let(finalPlace)
+                .let(placeStrategy)
         }
         return newTwoPlace.sortedBy { it.second }.map { it.first }
     }

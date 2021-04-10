@@ -9,7 +9,7 @@ fun main(args: Array<String>) {
 
     val steps = nodes.size
     val shuffle = nodes.flatMap(Node::children).size
-    val intersectionOptimizer = IntersectionOptimizer(steps, shuffle)
+    val intersectionOptimizer = IntersectionOptimizer(steps, shuffle, PlacingStrategy.AVERAGE)
 
     val nodesPositions = CoffmanGrahamLayeringAlgorithm(3).place(nodes)
     val nodesPositionsWithOptimization = CoffmanGrahamLayeringAlgorithm(3, intersectionOptimizer).place(nodes)
