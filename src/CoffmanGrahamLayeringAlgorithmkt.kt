@@ -1,23 +1,10 @@
 import java.util.*
 
-class CoffmanGrahamLayeringAlgorithm(val layerSize: Int) {
-    private val positions: MutableMap<String, Position> = mutableMapOf()
-    private var markersCounter: Int = 0
-
-    fun place(nodes: Collection<Node>): Map<Node, Position> {
-        val mappedNodes = nodes.associateBy { it.id }
-        val adjacencyMatrix = nodes.toAdjacencyMatrix()
-        val layers = placeInLayers(adjacencyMatrix).map { layer ->
-            layer.mapNotNull { mappedNodes[it] }.toMutableList()
-        }
-        appendDummy(layers)
-        layers.forEach {
-            println(it.map(Node::id))
-        }
-//        walk(root)
-//        val nodes = (listOf(root) + root.allChildren())
-//            .associateWith { positions[it.id]!! }
-//        return xAdjustment(nodes)
+class CoffmanGrahamLayeringAlgorithm(val layerSize: Int, val intersectionOptimizer: IntersectionOptimizer) {
+    fun place(nodes: List<Node>): Map<Node, Position> {
+        val layers = placeInLayers(nodes)
+            .appendDummy()
+            .let { intersectionOptimizer.optimize(it) }
 
         return assignCoordinates(layers).associate { it.first to it.second }
     }
@@ -31,29 +18,28 @@ class CoffmanGrahamLayeringAlgorithm(val layerSize: Int) {
         }
     }
 
-    private fun appendDummy(layers: List<MutableList<Node>>) {
+    private fun List<List<Node>>.appendDummy(): List<List<Node>> {
         var dummyCounter = 1
-        (0 until layers.size - 1).forEach { i ->
-            val current = layers[i]
-            val next = layers[i + 1]
-            val dummyNodes = current.flatMap { node ->
-                node.children
-                    //.filterNot { it.children.isEmpty() }
-                    //.also { println(it) }
-                    .filterNot { it.id in next.map(Node::id) }
-                    .also { println(it) }
-                    .map {
-                        Node("dummy_${dummyCounter++}", mutableListOf(it)).apply {
-                            node.children.remove(it)
-                            node.children.add(this)
+        val newLayers = mutableListOf(this.first())
+        (0 until this.size - 1).forEach { i ->
+            val dummyNodes = newLayers.last().flatMap { node ->
+                node.copy().let { newNode ->
+                    newNode.children.filterNot { it in this[i + 1] }.map {
+                        Node("dummy_${dummyCounter++}").apply {
+                            newNode.children.remove(it)
+                            newNode.children.add(this)
+                            this.children.add(it)
                         }
                     }
+                }
             }
-            next.addAll(dummyNodes)
+            newLayers.add(this[i + 1] + dummyNodes)
         }
+        return newLayers
     }
 
-    private fun placeInLayers(adj: AdjacencyMatrix): List<List<String>> {
+    private fun placeInLayers(nodes: List<Node>): List<List<Node>> {
+        val adj = nodes.toAdjacencyMatrix()
         val sortedNodes = topologicalSort(adj).toList()
             .sortedByDescending { it.second }
             .map { it.first }
@@ -77,7 +63,8 @@ class CoffmanGrahamLayeringAlgorithm(val layerSize: Int) {
             }
             currentLayer.add(it)
         }
-        return layers.reversed()
+        val mappedNodes = nodes.associateBy { it.id }
+        return layers.reversed().map { layer -> layer.mapNotNull { mappedNodes[it] } }
     }
 
     private fun <K, T> MutableMap<K, T>.removeAll(keys: List<K>) = keys.forEach { this.remove(it) }

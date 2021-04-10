@@ -2,14 +2,14 @@ import org.w3c.dom.Document
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 
-fun readGraphml(path: String): Collection<Node> {
+fun readGraphml(path: String): List<Node> {
     val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(File(path))
     val nodes = findNodes(doc)
     val edges = findEdges(doc)
     return link(nodes, edges)
 }
 
-private fun link(nodes: List<String>, edges: List<Pair<String, String>>): Collection<Node> {
+private fun link(nodes: List<String>, edges: List<Pair<String, String>>): List<Node> {
     val mappedNodes = nodes.associateWith { Node(it) }
     edges.forEach { (source, target) ->
         val parent = mappedNodes[source] ?: throw IllegalStateException("GRAPHML: wrong graph structure")
@@ -18,7 +18,7 @@ private fun link(nodes: List<String>, edges: List<Pair<String, String>>): Collec
     }
     //val root = (nodes - edges.map { it.second })
     //if (root.size != 1) throw IllegalStateException("GRAPHML: wrong graph structure")
-    return mappedNodes.values
+    return mappedNodes.values.toList()
     //return mappedNodes[root.first()] ?: throw IllegalStateException("GRAPHML: wrong graph structure")
 }
 

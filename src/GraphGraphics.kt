@@ -20,7 +20,7 @@ class GraphGraphics(
     private lateinit var graphics: Graphics2D
     private lateinit var nodes: Map<Node, Position>
 
-    fun drawTree(nodesInfo: Map<Node, Position>): BufferedImage {
+    fun drawGraph(nodesInfo: Map<Node, Position>): BufferedImage {
         nodes = nodesInfo
         prepareCanvas()
         nodes.forEach { drawNode(it.key, it.value) }
@@ -30,6 +30,7 @@ class GraphGraphics(
     fun drawNode(node: Node, pos: Position) {
         val (id, children) = node
         children.forEach { drawEdge(pos, nodes[it]!!) }
+        if (node.isDummy()) return
         val nodeShape = nodeShape(pos)
         graphics.color = borderColor
         graphics.draw(nodeShape)

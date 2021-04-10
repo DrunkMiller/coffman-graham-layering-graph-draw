@@ -16,6 +16,8 @@ data class Node(
     override fun hashCode() = id.hashCode()
 }
 
+fun List<Node>.ids() = this.map(Node::id)
+
 data class Position(val y: Double, val x: Double) {
     fun shift(shift: Double) = this.copy(x = this.x - shift)
 }
